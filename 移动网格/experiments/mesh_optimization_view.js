@@ -15,11 +15,31 @@
       diagnostic:round.inner.convergence_trace[event.j],
       complete:event.phase==='check'&&round.outer_converged};
   }
-  const api={timeline,position};
+  const determinant=m=>m[0][0]*m[1][1]-m[0][1]*m[1][0];
+  const inverse=m=>{const d=determinant(m);return [[m[1][1]/d,-m[0][1]/d],[-m[1][0]/d,m[0][0]/d]];};
+  const multiply=(a,b)=>a.map(row=>[0,1].map(j=>row[0]*b[0][j]+row[1]*b[1][j]));
+  const transpose=m=>[[m[0][0],m[1][0]],[m[0][1],m[1][1]]];
+  const edges=(nodes,c)=>[[nodes[c[1]][0]-nodes[c[0]][0],nodes[c[2]][0]-nodes[c[0]][0]],
+    [nodes[c[1]][1]-nodes[c[0]][1],nodes[c[2]][1]-nodes[c[0]][1]]];
+  function energyBreakdown(model,round,state){
+    const physical=round.input_physical,metric=round.frozen_metric;
+    const geometry=model.cells.map((c,i)=>{const E=edges(physical,c);return {E,area:determinant(E)/2,rho:Math.sqrt(determinant(metric[i]))};});
+    const area=geometry.reduce((s,c)=>s+c.area,0),sigma=geometry.reduce((s,c)=>s+c.area*c.rho,0);
+    const theta=area/sigma,lambda=4*theta*theta*(1-2*Math.log(theta)),coefficient=4*theta*theta;
+    const cells=model.cells.map((c,i)=>{
+      const {E,area,rho}=geometry[i],Ehat=edges(state.computational,c),B=multiply(Ehat,inverse(E));
+      const A=multiply(multiply(B,inverse(metric[i])),transpose(B)),trace=A[0][0]+A[1][1],det=determinant(A);
+      const weight=area*rho/lambda,traceTerm=weight*trace*trace,logTerm=-weight*coefficient*Math.log(det);
+      return {E,Ehat,B,A,area,rho,trace,det,weight,traceTerm,logTerm,energy:traceTerm+logTerm};
+    });
+    return {theta,lambda,sigma,area,coefficient,cells,traceTotal:cells.reduce((s,c)=>s+c.traceTerm,0),
+      logTotal:cells.reduce((s,c)=>s+c.logTerm,0),total:cells.reduce((s,c)=>s+c.energy,0)};
+  }
+  const api={timeline,position,energyBreakdown};
   if(typeof module!=='undefined'&&module.exports){module.exports=api;return;}
   const data=JSON.parse(document.getElementById('flow-data').textContent);
   const el=id=>document.getElementById(id);
-  let events=[],at=0,timer=null,tracked=0;
+  let events=[],at=0,timer=null,tracked=0,energyTimer=null,selectedCell=0;
   const currentCase=()=>data.cases[el('case').value];
   const scientific=x=>x===0?'0':x.toExponential(2);
   const labels={setup:'建立计算映射',inner:'优化计算网格',mapping:'映射回物理网格',check:'检查外层收敛'};
@@ -34,7 +54,39 @@
     const selected=events[at].j;ctx.fillStyle='#cb6438';ctx.beginPath();ctx.arc(x(rows[selected].pseudo_time),y(rows[selected][keys[0]]),3,0,2*Math.PI);ctx.fill();
     c.onclick=e=>{const target=(e.clientX-c.getBoundingClientRect().left-52)/(w-70)*rows.at(-1).pseudo_time;let j=0;rows.forEach((r,i)=>{if(Math.abs(r.pseudo_time-target)<Math.abs(rows[j].pseudo_time-target))j=i;});select(events.findIndex(e=>e.k===events[at].k&&e.j===j));};
   }
-  function pause(){clearTimeout(timer);timer=null;el('play').textContent='播放全流程';}
+  function pause(){clearTimeout(timer);clearTimeout(energyTimer);timer=null;energyTimer=null;el('play').textContent='播放全流程';el('energy-play').textContent='播放本轮能量计算';}
+  const precise=x=>Number(x).toPrecision(9);
+  const matrix=m=>m.map(row=>'[ '+row.map(precise).join('   ')+' ]').join('\n');
+  function energyMesh(model,state,delta){
+    const canvas=el('energy-cells'),w=canvas.getBoundingClientRect().width,ratio=globalThis.devicePixelRatio||1;
+    if(w<1)return;canvas.width=w*ratio;canvas.height=w*ratio;const ctx=canvas.getContext('2d');ctx.scale(ratio,ratio);
+    const pad=22,span=w-2*pad,point=p=>[pad+p[0]*span,w-pad-p[1]*span],scale=Math.max(...delta.map(Math.abs),1e-16);
+    model.cells.forEach((cell,i)=>{ctx.beginPath();cell.forEach((v,j)=>j?ctx.lineTo(...point(state.computational[v])):ctx.moveTo(...point(state.computational[v])));ctx.closePath();
+      const strength=Math.abs(delta[i])/scale;ctx.fillStyle=delta[i]<=0?`rgba(8,123,105,${.08+.75*strength})`:`rgba(190,91,51,${.08+.75*strength})`;ctx.fill();
+      ctx.strokeStyle=i===selectedCell?'#203e3a':'#aabbb4';ctx.lineWidth=i===selectedCell?3:.5;ctx.stroke();});
+    canvas.onclick=e=>{pause();const rect=canvas.getBoundingClientRect(),p=[(e.clientX-rect.left-pad)/span,1-(e.clientY-rect.top-pad)/span];
+      const found=model.cells.findIndex(c=>{const [a,b,d]=c.map(i=>state.computational[i]),q=multiply(inverse([[b[0]-a[0],d[0]-a[0]],[b[1]-a[1],d[1]-a[1]]]),[[p[0]-a[0],0],[p[1]-a[1],0]]);return q[0][0]>=0&&q[1][0]>=0&&q[0][0]+q[1][0]<=1;});
+      if(found>=0){selectedCell=found;render();}};
+  }
+  function renderEnergy(model,event,r,state){
+    const rows=r.inner.accepted_step_trace,j=event.j,previous=rows[Math.max(0,j-1)];
+    const now=energyBreakdown(model,r,state),before=j?energyBreakdown(model,r,previous):now,cell=now.cells[selectedCell],old=before.cells[selectedCell];
+    const delta=now.cells.map((c,i)=>c.energy-before.cells[i].energy),change=state.energy-previous.energy,dt=state.pseudo_time-previous.pseudo_time;
+    el('energy-step').max=rows.length-1;el('energy-step').value=j;el('energy-step-label').textContent=`第 ${event.k+1} 轮 · 接受步 j=${j}/${rows.length-1} · s=${precise(state.pseudo_time)}`;
+    el('energy-round').value=event.k;
+    el('energy-previous').disabled=j===0;el('energy-next').disabled=j===rows.length-1;el('energy-largest').disabled=j===0;
+    el('energy-cell').value=selectedCell;
+    el('energy-constants').textContent=`本轮冻结：物理面积 Σ|K|=${precise(now.area)}；Σ|K|ρ_K=${precise(now.sigma)}；θ=${precise(now.theta)}；λ=${precise(now.lambda)}。`;
+    el('energy-global').textContent=`全部 ${now.cells.length} 个单元：迹项合计 ${precise(now.traceTotal)} + 对数项合计 ${precise(now.logTotal)} = I_h ${precise(now.total)}。记录值 ${precise(state.energy)}；重算差 ${scientific(now.total-state.energy)}。`;
+    el('energy-change').textContent=j?`相邻接受步：I_h(j−1)=${precise(previous.energy)} → I_h(j)=${precise(state.energy)}；ΔI=${scientific(change)}（${change<0?'下降':change>0?'上升':'不变'}）；相对上一步 ${scientific(change/Math.abs(previous.energy))}。Δs=${scientific(dt)}；ΔI/Δs=${scientific(change/dt)}。`:'j=0 是本轮初态，尚无相邻接受步下降量。';
+    el('energy-sum-change').textContent=j?`迹项合计变化 ${scientific(now.traceTotal-before.traceTotal)} + 对数项合计变化 ${scientific(now.logTotal-before.logTotal)} = ΣΔI_K ${scientific(delta.reduce((s,v)=>s+v,0))}；${delta.filter(v=>v<0).length} 个单元下降、${delta.filter(v=>v>0).length} 个单元上升。`:'颜色图在接受步 j≥1 时显示相邻步单元能量变化。';
+    el('energy-matrices').textContent=`单元 K=${selectedCell+1}；顶点编号 ${model.cells[selectedCell].join(', ')}（从0计数）\n物理边矩阵 E_K（本轮固定）\n${matrix(cell.E)}\n计算边矩阵 Ê_K(j)\n${matrix(cell.Ehat)}\n冻结度量 M_K\n${matrix(r.frozen_metric[selectedCell])}\nB=Ê_K E_K⁻¹\n${matrix(cell.B)}\nA=B M_K⁻¹ Bᵀ\n${matrix(cell.A)}`;
+    el('energy-substitution').textContent=`|K|=${precise(cell.area)}；ρ_K=√det M_K=${precise(cell.rho)}\ntr A=${precise(cell.trace)}；det A=${precise(cell.det)}\nw_K=|K|ρ_K/λ=${precise(cell.weight)}\n迹项 w_K(tr A)²=${precise(cell.traceTerm)}\n对数项 −w_K·4θ²·ln(det A)=${precise(cell.logTerm)}\nI_K(j)=${precise(cell.traceTerm)} + (${precise(cell.logTerm)}) = ${precise(cell.energy)}\n${j?`上一步：迹项 ${precise(old.traceTerm)} + 对数项 ${precise(old.logTerm)} = ${precise(old.energy)}\n本步变化：迹项 ${scientific(cell.traceTerm-old.traceTerm)} + 对数项 ${scientific(cell.logTerm-old.logTerm)} = ΔI_K ${scientific(cell.energy-old.energy)}`:'初态：尚无相邻差值'}`;
+    const diagnostic=r.inner.convergence_trace[j];
+    el('energy-window').textContent=diagnostic.window_ready?`收敛检查另用固定窗口：锚点 s=${precise(diagnostic.window_anchor_s)}；归一化能量变化率 ${scientific(diagnostic.energy_change_rate)} / 阈值 ${scientific(diagnostic.energy_rate_threshold)}。相邻步 ΔI/Δs 用来解释本步变化，不直接替代窗口判据。`:'收敛检查的固定窗口尚未就绪；相邻步能量差不直接替代窗口判据。';
+    plot('energy-detail-curve',rows,['energy'],['#087b69']);energyMesh(model,state,delta);
+    el('energy-largest').onclick=()=>{pause();selectedCell=delta.indexOf(Math.min(...delta));render();};
+  }
   function mesh(id,nodes,ghost){
     const c=el(id),rect=c.getBoundingClientRect(),ratio=globalThis.devicePixelRatio||1;
     const w=rect.width,h=rect.width;c.width=w*ratio;c.height=h*ratio;
@@ -77,6 +129,7 @@
     const ratios=[['残量',d.mesh_residual_rms,d.residual_threshold],['窗口位移',d.displacement,d.displacement_threshold],['能量变化率',d.energy_change_rate,d.energy_rate_threshold]];
     el('thresholds').replaceChildren();for(const [label,value,tol] of ratios){const p=document.createElement('p');p.textContent=value==null?label+'：等待固定窗口':`${label} ${scientific(value)} / ${scientific(tol)} · ${value<=tol?'通过':'尚未通过'}`;const bar=document.createElement('meter');bar.min=0;bar.max=2;bar.low=0;bar.high=1;bar.optimum=0;bar.value=value==null?0:Math.min(2,value/tol);bar.title='指标/阈值，≤1通过；超过2按2显示';p.append(bar);el('thresholds').append(p);}
     if(el('quantitative').open){plot('energy-curve',r.inner.accepted_step_trace,['energy_relative_change'],['#087b69'],0);plot('quality-curve',r.inner.accepted_step_trace,['alignment_rms','equidistribution_rms'],['#57718a','#bb7a27'],1);}
+    if(el('energy-calculation').open)renderEnergy(model,event,r,view.mesh);
     el('outer-check').textContent=event.phase==='check'?`外层网格变化 ${scientific(r.mesh_change)} · 度量变化 ${scientific(r.metric_change)} · 连续 ${r.consecutive_success} / ${cfg.consecutive_rounds}`:'外层判定在本轮映射完成后进行';
     const q=view.mesh.computational[tracked],x=view.mesh.physical[tracked];
     el('mapping-point').textContent=`同一顶点 ${tracked}：计算坐标 (${q.map(v=>v.toFixed(4)).join(', ')}) → 物理坐标 (${x.map(v=>v.toFixed(4)).join(', ')})。点击网格可更换跟踪点。`;
@@ -85,9 +138,11 @@
   }
   function select(index){pause();at=Math.max(0,Math.min(index,events.length-1));render();}
   function choose(){pause();at=0;const model=currentCase();events=timeline(model);el('timeline').max=events.length-1;
+    selectedCell=0;el('energy-cell').replaceChildren();model.cells.forEach((c,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`单元 ${i+1} · 顶点 ${c.join('/')}`;el('energy-cell').append(o);});
     tracked=model.boundary.findIndex((b,i)=>b&&model.reference[i][0]>0&&model.reference[i][0]<1);
     el('rounds').replaceChildren();model.rounds.forEach((r,k)=>{const o=document.createElement('option');o.value=k;
       o.textContent=`第 ${k+1} 轮 · ${r.inner.solver_stats.accepted_bdf_steps} 个内层接受步`;el('rounds').append(o);});
+    el('energy-round').replaceChildren(...Array.from(el('rounds').options,o=>o.cloneNode(true)));
     el('case-summary').textContent=`已记录至外层收敛 · ${model.rounds.length} 轮外迭代 · ${model.rounds.reduce((sum,r)=>sum+r.inner.solver_stats.accepted_bdf_steps,0)} 个内层接受步`;
     render();}
   function schedule(){const event=events[at],delay=event.phase==='inner'?Number(el('speed').value):850;
@@ -97,8 +152,18 @@
   el('final').onclick=()=>select(events.length-1);el('timeline').oninput=()=>select(Number(el('timeline').value));
   el('rounds').onchange=()=>select(events.findIndex(e=>e.k===Number(el('rounds').value)));
   el('quantitative').ontoggle=render;
+  el('energy-calculation').ontoggle=()=>{pause();render();};
+  function energySelect(j){select(events.findIndex(e=>e.k===events[at].k&&e.j===j));}
+  el('energy-step').oninput=()=>energySelect(Number(el('energy-step').value));
+  el('energy-previous').onclick=()=>energySelect(Math.max(0,events[at].j-1));
+  el('energy-next').onclick=()=>energySelect(Math.min(position(currentCase(),events[at]).round.inner.accepted_step_trace.length-1,events[at].j+1));
+  el('energy-cell').onchange=()=>{pause();selectedCell=Number(el('energy-cell').value);render();};
+  el('energy-round').onchange=()=>select(events.findIndex(e=>e.k===Number(el('energy-round').value)));
+  function scheduleEnergy(){energyTimer=setTimeout(()=>{const e=events[at],last=currentCase().rounds[e.k].inner.accepted_step_trace.length-1;if(e.j>=last){pause();return;}at=events.findIndex(x=>x.k===e.k&&x.j===e.j+1);render();scheduleEnergy();},800);}
+  el('energy-play').onclick=()=>{if(energyTimer!==null){pause();return;}pause();const e=events[at],last=currentCase().rounds[e.k].inner.accepted_step_trace.length-1;if(e.j>=last)at=events.findIndex(x=>x.k===e.k&&x.j===0);el('energy-play').textContent='暂停能量演示';render();scheduleEnergy();};
   for(const [key,model] of Object.entries(data.cases)){const o=document.createElement('option');o.value=key;o.textContent=model.label;el('case').append(o);}
   el('case').value='band';el('case').onchange=choose;
   window.addEventListener('resize',render);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
   choose();
+  if(location.hash==='#energy-calculation')el('energy-calculation').open=true;
 })();

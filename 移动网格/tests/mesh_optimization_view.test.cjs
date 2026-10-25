@@ -25,3 +25,24 @@ test('playback visits every accepted state and every mapping before outer conver
     assert.ok(events.slice(0,-1).every(e=>!api.position(model,e).complete));
   }
 });
+
+test('cell trace-logarithmic sums reproduce every recorded FEALPy accepted-state energy',()=>{
+  let checked=0;
+  for(const model of Object.values(data.cases))for(const round of model.rounds){
+    let previous=null;
+    for(const state of round.inner.accepted_step_trace){
+      const result=api.energyBreakdown(model,round,state);
+      assert.ok(Math.abs(result.total-state.energy)<=2e-12*Math.max(1,Math.abs(state.energy)),
+        `energy mismatch at ${model.case}, k=${round.outer_iteration}, s=${state.pseudo_time}`);
+      assert.ok(result.cells.every(c=>c.area>0&&c.det>0));
+      if(previous){
+        assert.equal(result.theta,previous.theta);
+        assert.equal(result.lambda,previous.lambda);
+        const change=result.cells.reduce((s,c,i)=>s+c.energy-previous.cells[i].energy,0);
+        assert.ok(Math.abs(change-(result.total-previous.total))<=2e-12*Math.max(1,Math.abs(result.total)));
+      }
+      previous=result;checked++;
+    }
+  }
+  assert.ok(checked>1900);
+});
