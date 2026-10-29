@@ -1,6 +1,6 @@
 # 长物理时间与三重循环演示
 
-[打开本地演示](http://localhost:8765/results/mentor_2026-10-23/p2_v2/index.html) · [离线HTML](../../results/mentor_2026-10-23/p2_v2/index.html) · [三分钟讲稿](mentor_walkthrough_v2.md) · [本地求解器审查](three_loop_time_audit_v2.md)
+[打开本地演示](http://localhost:8765/results/mentor_2026-10-23/p2_v2/index.html) · [离线HTML](../../results/mentor_2026-10-23/p2_v2/index.html) · [三分钟讲稿](mentor_walkthrough_v2.md) · [本地求解器审查](../archive/diagnostics/three_loop_time_audit_v2.md)
 
 主演示默认回放60个真实物理时间步、61个时间节点，Δt=0.02，从t=0到1.2。解析移动界面已计算100步到t=2.0，页面可选择10/30/60/100步前缀；数值Burgers已计算60步。前缀选择读取相应实际状态，不改变数值轨迹，也不将较短回放解释为重新计时。
 

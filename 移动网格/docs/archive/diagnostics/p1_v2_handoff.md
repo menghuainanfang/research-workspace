@@ -4,12 +4,12 @@
 
 ## 结果入口（本机数值已验证）
 
-- [切向移动优化全流程](../../results/mentor_2026-10-23/optimization_flow/index.html)：三个情况均实际完成外层收敛，每轮展示全部内迭代及物理映射，见[全流程说明](optimization_flow.md)。
-- [E共用判据面板](../../results/mentor_2026-10-23/p1_v2/e/e_variational_mesh.html)：切向平滑提前达标、切向自适应到上限未达标两种冻结问题。
-- [H共用面板验证](../../results/mentor_2026-10-23/p1_v2/h_preview/h_burgers.html)：现有Burgers求解器的两个物理步，物理时间/耦合轮次/网格接受步分别显示。
-- [静态输入](../../results/mentor_2026-10-23/p1_v2/static/h_burgers.html)：物理步n=0，仅优化网格；PDE误差为null。
-- [计数审计](convergence_counts_audit_v2.md)、[字段词典](mesh_field_dictionary_v2.md)、[P2可复用的数据契约](convergence_trace_contract_v2.md)。
-- [实际接受步科研图](../../results/mentor_2026-10-23/p1_v2/e/convergence_diagnostics.png)：残量阈值、首次完整达标、分epoch能量与真实步长。
+- [切向移动优化全流程](../../../results/mentor_2026-10-23/optimization_flow/index.html)：三个情况均实际完成外层收敛，每轮展示全部内迭代及物理映射，见[全流程说明](../../mentor_2026-10-23/optimization_flow.md)。
+- [E共用判据面板](../../../results/mentor_2026-10-23/p1_v2/e/e_variational_mesh.html)：切向平滑提前达标、切向自适应到上限未达标两种冻结问题。
+- [H共用面板验证](../../../results/mentor_2026-10-23/p1_v2/h_preview/h_burgers.html)：现有Burgers求解器的两个物理步，物理时间/耦合轮次/网格接受步分别显示。
+- [静态输入](../../../results/mentor_2026-10-23/p1_v2/static/h_burgers.html)：物理步n=0，仅优化网格；PDE误差为null。
+- [计数审计](convergence_counts_audit_v2.md)、[字段词典](../../mentor_2026-10-23/mesh_field_dictionary_v2.md)、[P2可复用的数据契约](../../mentor_2026-10-23/convergence_trace_contract_v2.md)。
+- [实际接受步科研图](../../../results/mentor_2026-10-23/p1_v2/e/convergence_diagnostics.png)：残量阈值、首次完整达标、分epoch能量与真实步长。
 
 ## E：为何在这里停止
 
@@ -55,7 +55,7 @@
 |16|adaptive|3.0|未达到|3.000000|pseudo_time_cap|True|61|131|366|1.219|
 |16|adaptive|5.0|未达到|5.000000|pseudo_time_cap|True|61|141|386|1.333|
 
-完整[JSON](../../results/mentor_2026-10-23/p1_v2/matrix/summary.json)/[CSV](../../results/mentor_2026-10-23/p1_v2/matrix/summary.csv)同时包含阈值、初末残量/能量、njev/nlu、最小面积、步长极值/中位值及明确的mesh_status/solver_status。
+完整[JSON](../../../results/mentor_2026-10-23/p1_v2/matrix/summary.json)/[CSV](../../../results/mentor_2026-10-23/p1_v2/matrix/summary.csv)同时包含阈值、初末残量/能量、njev/nlu、最小面积、步长极值/中位值及明确的mesh_status/solver_status。
 每次运行的固定输入、metric、终点、输出采样与逐接受诊断另存JSON/CSV。
 
 ## 采样、步长和继续积分

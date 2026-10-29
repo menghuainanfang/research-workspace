@@ -7,7 +7,7 @@
 - P1已完成三组切向移动案例的完整内外迭代、真实收敛监测、能量与质量曲线；见[P1报告](../mentor_2026-10-23/optimization_flow.md)。
 - P2已完成100步解析目标、60步数值Burgers和静态输入演示；见[P2报告](../mentor_2026-10-23/three_loop_time_demo_v2.md)。
 - P0中的数值Burgers求解及固定网格基线已运行；AC/CH学习与个人掌握程度由学习记录单独确认。
-- [当前项目入口](../../README.md)与[分类文档](../README.md)汇总实际代码、数据和验收结果。
+- [当前项目入口](../../README.md)与[分类文档](../文档导航.md)汇总实际代码、数据和验收结果。
 
 ## 优先级与交付
 
@@ -19,8 +19,8 @@
 
 ## 两份可直接使用的启动提示词
 
-- [AC/CH/Burgers 新窗口互动学习](../prompts/study_ac_ch_burgers_2026-10-23.md)。
-- [本地 Codex：收敛、展示重构与三重循环](../prompts/codex_mesh_convergence_three_loops_2026-10-23.md)。
+- [AC/CH/Burgers 新窗口互动学习](../archive/tasks/study_ac_ch_burgers_2026-10-23.md)。
+- [本地 Codex：收敛、展示重构与三重循环](../archive/tasks/codex_mesh_convergence_three_loops_2026-10-23.md)。
 
 ## 专项启动时的源码记录（2026-10-23）
 
