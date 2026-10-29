@@ -43,6 +43,10 @@ movingmesh/
 |代码与数据|[算法](移动网格/src) · [实验](移动网格/experiments) · [结果分类](移动网格/results/README.md)|
 |验证与研究资料|[文档分类](移动网格/docs/README.md) · [研究方向与阅读计划](移动网格/docs/research_overview.md)|
 
+## Burgers 方程教学演示
+
+[独立演示](学习练手项目/burgers-lab/index.html) · [代码与说明](学习练手项目/burgers-lab/README.md)。一维无源黏性方程：固定网格节点、解曲线、局部速度箭头、时空图、单元通量及真实物理步的变化率分解。与移动网格P1/P2分别讲解。
+
 ## 本地使用
 
 本地工作库：`D:/桌面/movingmesh`。双击 `打开科研工作库.cmd` 浏览首页；运行程序时进入对应项目，按项目 README 配置环境。
