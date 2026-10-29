@@ -7,7 +7,7 @@
 | 方向 | 内容 | 入口 |
 |---|---|---|
 | **移动网格** | 毕业论文主线：论文精读、学习交流、算法代码、数值实验与研究产出 | [研究说明](移动网格/README.md) · [研究网页](移动网格/index.html) |
-| **学习练手项目** | 独立学习任务、编程练习与科研小项目，目前归档已完成交付的 FEALPy CDR 求解器 | [项目目录](学习练手项目/README.md) · [项目网页](学习练手项目/index.html) |
+| **学习练手项目** | 独立学习任务、编程练习与科研小项目，包含 Burgers 波形实验室与已归档的 FEALPy CDR 求解器 | [项目目录](学习练手项目/README.md) · [项目网页](学习练手项目/index.html) |
 
 [在线首页](https://menghuainanfang.github.io/research-workspace/)
 
@@ -29,6 +29,7 @@ movingmesh/
 └── 学习练手项目/
     ├── README.md
     ├── index.html
+    ├── burgers-lab/           # Burgers 求解、离线网页与验证数据
     └── cdr-solver/            # CDR 已交付归档及配套资料
 ```
 
