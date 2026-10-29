@@ -30,6 +30,8 @@ def add_display_metrics(result):
 def write_viewer(result, output):
     template = Path(__file__).with_name("mesh_optimization_viewer.html").read_text(encoding="utf-8")
     script = Path(__file__).with_name("mesh_optimization_view.js").read_text(encoding="utf-8")
+    math_script = (ROOT / "tools/vendor/katex.min.js").read_text(encoding="utf-8") + "\n" + Path(__file__).with_name("math_display.js").read_text(encoding="utf-8")
+    template = template.replace("__MATH_SCRIPT__", math_script)
     encoded = json.dumps(result, ensure_ascii=False, allow_nan=False)
     (output / "index.html").write_text(template.replace("__FLOW_DATA__", encoded).replace(
         "__FLOW_SCRIPT__", script), encoding="utf-8")
