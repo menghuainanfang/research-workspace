@@ -5,7 +5,7 @@
 - 仓库：https://github.com/menghuainanfang/research-workspace
 - 合并目标：main
 - 功能分支：feat/burgers-learning-demo-20261029
-- 基线：2026-10-29 获取的 origin/main，提交 146cb90。
+- 已包含远端 main 的提交 93152c9。
 - 发布工作目录：D:/桌面/burgers-learning-publish。
 - 原工作目录：D:/桌面/movingmesh。该目录的其他未提交研究改动由对应窗口维护。
 
@@ -23,7 +23,7 @@ Burgers 独立项目位于 `学习练手项目/burgers-lab/`：
 | README.md | 模型、运行方式与适用范围 |
 | HANDOFF.md | 合并入口与验收说明 |
 
-导航更新：根目录 `README.md`、`index.html`、`资料总索引.md`，以及 `学习练手项目/README.md`、`学习练手项目/index.html`。沿用现有目录分类，移动网格研究和 CDR 归档位于原目录。
+导航更新：根目录 `README.md`、`index.html`，以及 `学习练手项目/项目目录.md`、`学习练手项目/index.html`。沿用现有目录分类，移动网格研究和 CDR 归档位于原目录。
 
 ## 合并操作
 
@@ -33,6 +33,8 @@ Burgers 独立项目位于 `学习练手项目/burgers-lab/`：
 git fetch origin
 git merge origin/feat/burgers-learning-demo-20261029
 ```
+
+本分支同时包含仓库文档整理：总索引并入根 README，资料子目录改用明确的导航名称，旧任务与阶段报告归入 `移动网格/docs/archive/`。已同步修改引用。
 
 新增项目目录可整体接收。导航文件若发生冲突，保留双方新增入口。网页 `index.html` 由 `template.html` 与 `results.json` 生成；改页面时编辑模板后重新运行 solve.py。
 

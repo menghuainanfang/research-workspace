@@ -82,7 +82,7 @@ SciPy BDF 公共接口不暴露内部误差拒步数，该项记录 null（未�
 
 ## 独立网页与离线检查（本机静态已验证）
 
-[实验导航](../../demos/index.html)专门列出E冻结度量、F稳态Poisson、H物理时间三个演示，G标为当前没有独立结果。
+[实验导航](../../../demos/index.html)专门列出E冻结度量、F稳态Poisson、H物理时间三个演示，G标为当前没有独立结果。
 研究主档仍通过项目首页进入；首页只新增独立实验导航链接，用户已有首页改动保留。E的计算/物理双网格比较保留。
 旧E/F URL保留原内嵌数值，仅增加返回导航；新E另存于专项目录。模板与生成器同时维护导航路径。
 `tools/check_mentor_pages.py:main` 对6个实际页面核验相对资源存在、内嵌JSON可解析、全部内联JS通过Node语法检查；无外部脚本或图片资源。
@@ -90,7 +90,7 @@ SciPy BDF 公共接口不暴露内部误差拒步数，该项记录 null（未�
 
 ## 真实物理时间结果（本机已验证）
 
-[三层流程、上游依赖与论文公式对照](triple_loop.md)。代码 `src/burgers_rezone.py:run/solve_step/numerical_metric/transfer`，输出驱动 `experiments/h_burgers_physical_time.py:main`。
+[三层流程、上游依赖与论文公式对照](../../mentor_2026-10-23/triple_loop.md)。代码 `src/burgers_rezone.py:run/solve_step/numerical_metric/transfer`，输出驱动 `experiments/h_burgers_physical_time.py:main`。
 默认n=8，3个真实物理步，Δt=0.02，中层上限6，内层伪时间上限3；初始内部扰动±0.2/n。
 三步均达到PDE残量、中层一致性和全部13次网格内层收敛判据；实际中层次数5/4/4。
 移动与固定网格采用相同的初始扰动、物理方程、步长、边界和PDE精度。

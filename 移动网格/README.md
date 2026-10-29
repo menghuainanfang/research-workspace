@@ -1,6 +1,6 @@
 # 移动网格研究与数值演示
 
-[科研工作库](../README.md) · [演示导航](index.html) · [文档分类](docs/README.md)
+[科研工作库](../README.md) · [演示导航](index.html) · [文档分类](docs/文档导航.md)
 
 当前交付为二维切向移动网格的完整优化流程，以及独立的长物理时间三重循环演示。边上节点沿边移动，四角固定。研究方向与导师任务保存在[研究方向与阅读计划](docs/research_overview.md)，本页按实际完成的程序和证据组织。
 
@@ -24,9 +24,9 @@ P1三例实际外迭代分别为3、19、17轮，均达到连续两轮外层判�
 |算法实现|[src](src)|几何、变分能量、BDF监测、网格优化、Burgers求解和时间驱动|
 |实验入口|[experiments](experiments)|生成数值记录和演示网页|
 |验证|[tests](tests) · [验证结果](results/mentor_2026-10-23/p2_v2/validation.json)|数学性质、收敛状态、时间加密和数据一致性|
-|结果与数据|[结果分类](results/README.md)|P1/P2页面、JSON、CSV、逐步压缩记录与历史对照|
-|文档|[文档分类](docs/README.md)|方法、字段、验收、研究规划及历史说明|
-|文献|[论文索引](论文精读/资料索引.md) · [参考实现](references/README.md)|阅读记录与来源；论文原件留在本地|
+|结果与数据|[结果分类](results/数据说明.md)|P1/P2页面、JSON、CSV、逐步压缩记录与历史对照|
+|文档|[文档分类](docs/文档导航.md)|方法、字段、验收、研究规划及历史说明|
+|文献|[论文索引](论文精读/资料索引.md) · [参考实现](references/来源说明.md)|阅读记录与来源；论文原件留在本地|
 
 ## 本地预览与复现
 
@@ -55,4 +55,4 @@ Python环境与外部FEALPy源码要求见[环境说明](docs/environment_audit.
 
 ## 历史实验
 
-[E/F及旧诊断归档](results/README.md#历史对照)保留原始数值证据。旧E、G网址引导到当前P1；Poisson对照作为历史基线保留。[导师任务原文](docs/prompts/README.md)与[阅读计划](docs/research_overview.md)分开保存，完成状态由当前报告给出。
+[E/F及旧诊断归档](results/数据说明.md#历史对照)保留原始数值证据。旧E、G网址引导到当前P1；Poisson对照作为历史基线保留。[导师任务原文](docs/archive/tasks/任务来源.md)与[阅读计划](docs/research_overview.md)分开保存，完成状态由当前报告给出。

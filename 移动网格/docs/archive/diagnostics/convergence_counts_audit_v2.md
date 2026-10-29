@@ -60,5 +60,5 @@ cd D:\桌面\movingmesh\移动网格
 .\.venv\Scripts\python.exe -m experiments.p1_counts_audit_v2
 ```
 
-机器证据：[counts_audit.json](../../results/mentor_2026-10-23/p1_v2/counts_audit.json)。
+机器证据：[counts_audit.json](../../../results/mentor_2026-10-23/p1_v2/counts_audit.json)。
 旧版Convergence参数原样保留在源码快照及各次原始输出中，供v2对照。
