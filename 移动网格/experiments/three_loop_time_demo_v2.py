@@ -75,6 +75,7 @@ def render_site():
         model["states"]=story;model["algorithm_blobs"]=blobs
     encoded=json.dumps({"models":models,"field_dictionary":FIELD_DICTIONARY},ensure_ascii=False,allow_nan=False)
     if len(encoded.encode("utf-8"))>80*1024**2:raise RuntimeError("Offline page dataset exceeds 80 MiB; reduce detailed inner traces")
+    template=template.replace("__MATH_SCRIPT__", (ROOT/"tools/vendor/katex.min.js").read_text(encoding="utf-8")+"\n"+Path(__file__).with_name("math_display.js").read_text(encoding="utf-8"))
     (OUTPUT/"index.html").write_text(render_diagnostic_assets(template).replace("__TIME_DATA__",encoded).replace("__TIME_SCRIPT__",script),encoding="utf-8")
 
 

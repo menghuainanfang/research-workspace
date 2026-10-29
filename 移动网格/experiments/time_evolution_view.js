@@ -92,8 +92,17 @@
     for(const count of (max===0?[0]:[10,30,60,100].filter(n=>n<=max))){const o=document.createElement('option');o.value=count;o.textContent=count===0?'静态输入（0个物理步）':count+' 个物理步';el('horizon').append(o);}el('horizon').value=max>=60?60:max;setHorizon();
     const type=m.scenario==='burgers'?'已数值求解Burgers':m.scenario==='static'?'静态解析输入，不推进物理时间':'教学用时变解析目标网格演示（不求解非线性PDE）';el('type').textContent=type;
     el('title').textContent=m.scenario==='burgers'?'二维黏性 Burgers：解与网格一起演化':m.scenario==='static'?'静态输入：只优化网格':'移动界面：观察网格连续跟随';
-    el('problem').textContent=m.scenario==='burgers'?'u_t + u(u_x+u_y) − 0.05Δu = f；P1有限元、后向Euler、Picard迭代。新时间步继承上一时刻网格。':'解析陡变界面沿水平方向周期移动，度量来自已知目标；每个时间节点重新计算目标并更新网格。';
+    el('problem').textContent=m.scenario==='burgers'?'求解下列非线性方程；采用P1有限元、后向Euler和Picard迭代，新时间步继承上一时刻网格。':'解析陡变界面沿水平方向周期移动，度量来自已知目标；每个时间节点重新计算目标并更新网格。';
     if(m.scenario==='static')el('problem').textContent='解析目标与物理时间均固定在t=0，仅记录网格优化前后状态。';
+
+    const eq=tex=>'<div class="equation">'+window.MeshMath.typeset(tex)+'</div>';
+    el('equation-explanation').innerHTML=m.scenario==='burgers'?
+      '<p>真正求解含制造源项的二维标量黏性 Burgers 方程：</p>'+eq(String.raw`u_t+u(u_x+u_y)-\nu\Delta u=f,\quad\nu=0.05`)+
+      '<p>制造解用于给定初值、边界值、源项和计算误差：</p>'+eq(String.raw`u_*=e^{-t}\sin[\pi(x-0.4t)]\sin(\pi y)`)+eq(String.raw`f=\partial_tu_*+u_*(\partial_xu_*+\partial_yu_*)-0.05\Delta u_*`)+
+      '<p>内部场由 P1 有限元、后向 Euler 和 Picard 迭代求得，度量来自数值解梯度。相位向右移动并随时间衰减，没有设置左右往返。</p>':
+      '<p>解析目标场：'+(m.scenario==='static'?'固定在 t=0，只优化网格。':'形状和往返轨迹由公式预先指定，不求解物理 PDE。')+'</p>'+eq(String.raw`u_{\mathrm{target}}=\tanh\!\left(25[x-0.5-a(t)-0.15\sin(2\pi y)]\right)`)+eq(String.raw`a(t)=-0.18\cos\left(\frac{2\pi t}{1.2}\right)`)+
+      '<p>目标场等于零的弯曲界面位置：</p>'+eq(String.raw`x_{\mathrm{interface}}(y,t)=0.5+a(t)+0.15\sin(2\pi y)`)+
+      '<p>正弦项决定纵向弯曲形状，余弦时间项决定整体左右往返。t=0 时中心 x=0.32；t=0.6 时 x=0.68；t=1.2 时回到 x=0.32，周期1.2。网格跟随陡变带重新分配节点。往返是指定轨迹，并非求解出一个正弦波自行折返。</p>';
     [...el('guide').children].forEach((b,i)=>b.textContent=(i+1)+' '+(i===1&&m.scenario==='static'?'检查静态时间输入':descriptions[i]));
     el('sources').textContent=`网格 ${m.config.n}×${m.config.n}，${m.reference.length} 个P1自由度；数据版本 ${m.schema_version}。项目 ${m.provenance.project.sha}；FEALPy ${m.provenance.fealpy.sha}。完整 ${m.states.at(-1).physical_step_index} 个物理步数据集实测 ${m.performance.wall_seconds.toFixed(2)} 墙钟秒；选择较短回放不代表重新计时。\n复现：python -m experiments.three_loop_time_demo_v2 --scenario ${m.scenario} --physical-steps ${m.config.steps||10} --dt-physical ${m.config.physical_dt||.02} --nx ${m.config.n} --save-inner-traces key`;
   }
