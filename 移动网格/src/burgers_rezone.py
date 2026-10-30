@@ -119,7 +119,8 @@ def solve_step(nodes, cells, old_values, time, dt, data=BurgersData(), *, tolera
     return values, {"status": status, "nonlinear_iterations": iteration,
                     "relative_nonlinear_residual": residual_history[-1], "residual_history": residual_history,
                     "boundary_error": float(np.max(np.abs(values[boundary]-exact_boundary))),
-                    "l2_error": float(mesh.error(exact, uh, q=6)), "mass": mass(nodes, cells, values)}
+                    "l2_error": float(mesh.error(exact, uh, q=6)) if getattr(data, "has_exact_solution", True) else None,
+                    "mass": mass(nodes, cells, values)}
 
 
 def run(*, n=8, steps=3, dt=.02, inner_cap=3., max_outer=6, moving=True,

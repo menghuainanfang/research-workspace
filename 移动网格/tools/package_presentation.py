@@ -37,7 +37,7 @@ def main():
         burgers_source = ROOT.parent / '学习练手项目/burgers-lab'
         burgers_target = package / '学习练手项目/burgers-lab'
         burgers_target.mkdir(parents=True, exist_ok=True)
-        for name in ['index.html', 'results.json', 'solve.py', 'README.md']:
+        for name in ['index.html', 'results.json', 'solve.py', 'README.md', 'plane.html', 'results_2d.json', 'solve_2d.py']:
             shutil.copy2(burgers_source / name, burgers_target / name)
         while pending:
             relative = pending.pop()
@@ -69,7 +69,7 @@ def main():
 <h1>移动网格 · 演示入口</h1><p>解压整个文件夹，使用新版 Edge 或 Chrome 打开本文件。网页内已包含回放数据，不需要联网或安装 Python。</p>
 <article><h2><a href="results/mentor_2026-10-23/optimization_flow/index.html">P1 · 网格优化全流程</a></h2><p>三个切向移动案例；完整内迭代、物理映射与外层收敛。</p><p><a href="results/mentor_2026-10-23/optimization_flow/index.html#energy-calculation">直接进入：逐步能量计算演示</a></p></article>
 <article><h2><a href="results/mentor_2026-10-23/p2_v2/index.html">P2 · 物理时间三重循环</a></h2><p>静态优化、100步解析移动目标和已验收的60步数值Burgers；可展开 n → k → j。</p></article>
-<article><h2><a href="学习练手项目/burgers-lab/index.html">Burgers · 方程与网格上的数值解</a></h2><p>从速度波形、传播箭头、时空图到单元通量及真实时间步的变化率。</p></article><article><h2>建议演示顺序</h2><ol><li>P1选弯曲陡变带，播放全流程或查看收敛结果。</li><li>展开逐步能量计算：选外层轮次、点击下一接受步，再定位下降贡献最大单元，查看公式代入及总和。</li><li>P2先播放解析移动目标，再展开算法模式，固定物理步查看外层与内层。</li><li>切换数值Burgers，说明PDE残量与网格收敛独立判断；当前移动网格误差高于固定基线。</li></ol></article>
+<article><h2><a href="学习练手项目/burgers-lab/index.html">Burgers · 方程与网格上的数值解</a></h2><p>从速度波形、传播箭头、时空图到单元计算。</p><p><a href="学习练手项目/burgers-lab/plane.html">直接看：二维平面上的传播与扩散 →</a></p></article><article><h2>建议演示顺序</h2><ol><li>P1选弯曲陡变带，播放全流程或查看收敛结果。</li><li>展开逐步能量计算：选外层轮次、点击下一接受步，再定位下降贡献最大单元，查看公式代入及总和。</li><li>P2先播放解析移动目标，再展开算法模式，固定物理步查看外层与内层。</li><li>切换数值Burgers，说明PDE残量与网格收敛独立判断；当前移动网格误差高于固定基线。</li></ol></article>
 <p><a href="results/mentor_2026-10-23/p2_v2/long_time_diagnostics.png">打开误差与网格运动诊断图</a></p>
 <small>P2首开需解析较多数据，请在演示前提前打开两个页面。算法面板使用浏览器原生gzip解压功能。解析目标明确未求解PDE。关键物理步保存全部内层坐标，其余步显示已有诊断与初末网格。</small></html>''', encoding='utf-8')
         (package / '先读我.txt').write_text('''移动网格演示包 · 2026-10-30演示版
