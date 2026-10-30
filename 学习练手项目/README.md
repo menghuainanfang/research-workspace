@@ -14,4 +14,4 @@ CDR 的程序、讲义、学习路线、验证结果和汇报作为交付档案�
 
 ## Burgers方程教学演示
 
-[网页](burgers-lab/index.html) · [模型与运行](burgers-lab/README.md)。一维黏性无源方程，在固定网格上展示波形与单元数值计算。
+[网页](burgers-lab/index.html) · [模型与运行](burgers-lab/README.md)。二维黏性无源方程，在固定平面上展示解的传播与扩散。

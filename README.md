@@ -45,7 +45,7 @@ movingmesh/
 
 ## Burgers 方程教学演示
 
-[独立演示](学习练手项目/burgers-lab/index.html) · [代码与说明](学习练手项目/burgers-lab/README.md)。一维无源黏性方程：固定网格节点、解曲线、局部速度箭头、时空图、单元通量及真实物理步的变化率分解。与移动网格P1/P2分别讲解。
+[独立演示](学习练手项目/burgers-lab/index.html) · [代码与说明](学习练手项目/burgers-lab/README.md)。二维无源黏性方程：固定网格、平面颜色场、立体数值曲面与位置跟踪。与移动网格P1/P2分别讲解。
 
 ## 本地使用
 
