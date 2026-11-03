@@ -37,7 +37,7 @@ def main():
         burgers_source = ROOT.parent / '学习练手项目/burgers-lab'
         burgers_target = package / '学习练手项目/burgers-lab'
         burgers_target.mkdir(parents=True, exist_ok=True)
-        for name in ['index.html', 'README.md', 'plane.html', 'results_2d.json', 'solve_2d.py']:
+        for name in ['index.html', 'README.md', 'plane.html', 'results_2d.json.gz', 'validation_2d.json', 'solve_2d.py', 'schemes_2d.py', 'plane_template.html', 'plane_view.js', 'test_schemes_2d.py', 'plane_view.test.cjs']:
             shutil.copy2(burgers_source / name, burgers_target / name)
         while pending:
             relative = pending.pop()

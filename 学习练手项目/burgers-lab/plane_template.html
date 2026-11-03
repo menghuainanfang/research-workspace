@@ -1,30 +1,53 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>二维平面上的Burgers</title><style>*{box-sizing:border-box}body{margin:0;background:#f4f5f0;color:#203e3a;font:16px/1.8 system-ui,'Microsoft YaHei',sans-serif}main{max-width:1200px;margin:auto;padding:24px}h1{font-size:28px}h2{font-size:19px}a{color:#087b69}p{color:#647670}.pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.panel{background:white;border:1px solid #d9e2dc;border-radius:12px;padding:16px;margin:18px 0;min-width:0}canvas{width:100%;aspect-ratio:1;display:block}.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center}button{font:inherit;padding:8px 12px;background:white;color:inherit;border:1px solid #d9e2dc;border-radius:6px;cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #b77728}input[type=range]{flex:1;min-width:100px;accent-color:#087b69}.formula{overflow:auto;padding:12px}.note{background:#e7eee7;padding:14px}.small{font-size:13px}@media(max-width:760px){main{padding:16px}.pair{grid-template-columns:1fr}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}</style><main><a href="../../index.html">演示首页</a><h1>固定二维平面上，一团高值怎样演化？</h1>
-<p>平面上的每个位置都有一个标量值。这里使用简化的非线性输运模型，对流系数为(u,u)：正的高值区域向右上方输运，黏性同时将它抹平。不是水面在振荡，也不是网格在膨胀。</p>
-<div id="equation" class="formula"></div><p class="small">无外力，黏性0.02；单位正方形边界值为零。初值为左下方的光滑局部峰；二维P1有限元、后向Euler、Picard迭代。两张图使用同一组真实数值解。</p>
-<div class="controls"><button id="play">播放</button><button id="reset">回到初始</button><button id="previous">上一步</button><button id="next">下一步</button><strong id="time"></strong><input id="timeline" aria-label="二维物理时间" type="range" min="0" max="80" value="0"></div>
-<div class="controls"><label><input type="checkbox" id="grid" checked>显示固定网格</label><label><input type="checkbox" id="arrows" checked>显示局部输运方向</label></div>
-<section class="pair"><article class="panel"><h2>① 俯视：位置不动，颜色在变化</h2><canvas id="plane" role="img" aria-label="二维Burgers固定网格颜色图"></canvas><p class="small">横轴x向右，纵轴y向上。红黄为高值、蓝色为低值，色标固定为0到1。网格线从头到尾不动；白圈为初始峰位置，黑点跟踪一个固定空间位置。</p></article><article class="panel"><h2>② 同一个解，竖起来看数值大小</h2><canvas id="surface" role="img" aria-label="二维Burgers解的立体数值曲面"></canvas><p class="small">底面仍是同一个x-y平面；竖直高度表示u，不是第三个空间方向或真实水面。立体图只是帮助读懂颜色对应的数值。</p></article></section>
-<p id="state" class="note"></p><div id="tracked" class="formula"></div><p class="small">点击左图选择固定位置：观察波团经过时这里的值怎样升高、降低。箭头表示对流系数(u,u)，不是网格位移或已经计算好的粒子轨迹。</p>
-<section class="panel"><h2>时间到底表示什么？</h2><p>时间滑块上的每一步，对应求解器从已知场计算下一时刻的整个二维场。初值只规定t=0；后面的颜色和形状由无源Burgers方程数值求得，没有预先指定峰走到哪里，也没有指定折返路径。</p><div id="update" class="formula"></div><p>绿色区域不一定是同一批“物质”在移动；这里展示的是每个空间位置的场值。峰的位置可能移动，而同一节点的坐标始终不变。</p><p id="verification" class="small"></p><p><a href="results_2d.json">原始二维数据</a> · <a href="solve_2d.py">求解代码</a></p></section></main><script>__KATEX__</script><script>
-const d=__DATA__,$=id=>document.getElementById(id),math=s=>katex.renderToString(s,{output:'mathml',displayMode:true});let j=0,timer=null,tracked=0;
-tracked=d.nodes.reduce((b,p,i)=>Math.hypot(p[0]-.5,p[1]-.5)<Math.hypot(d.nodes[b][0]-.5,d.nodes[b][1]-.5)?i:b,0);
-$('equation').innerHTML=math(String.raw`u_t+\underbrace{u\,u_x+u\,u_y}_{\text{向右、向上的非线性输运}}=\underbrace{0.02(u_{xx}+u_{yy})}_{\text{黏性平滑}}`);
-$('update').innerHTML=math(String.raw`\frac{u^{n+1}-u^n}{\Delta t}+u^{n+1}(u_x^{n+1}+u_y^{n+1})=0.02\Delta u^{n+1},\qquad\Delta t=0.01`);
-function pause(){clearInterval(timer);timer=null;$('play').textContent='播放'}
-function surface(id){const c=$(id),w=c.getBoundingClientRect().width,r=devicePixelRatio||1;c.width=w*r;c.height=w*r;const ctx=c.getContext('2d');ctx.scale(r,r);return {c,ctx,w}}
-function draw(){const u=d.values[j],peak=Math.max(...u),peakIndex=u.indexOf(peak),initial=d.values[0].indexOf(Math.max(...d.values[0]));$('timeline').value=j;$('time').textContent='t='+d.times[j].toFixed(2);$('previous').disabled=j===0;$('next').disabled=j===80;
- const {c,ctx,w}=surface('plane'),p=point=>[30+point[0]*(w-60),w-30-point[1]*(w-60)];
- function color(v){return `hsl(${220-220*Math.max(0,Math.min(1,v))} 70% ${30+25*Math.max(0,Math.min(1,v))}%)`}
- d.cells.forEach(cell=>{ctx.beginPath();cell.forEach((i,k)=>k?ctx.lineTo(...p(d.nodes[i])):ctx.moveTo(...p(d.nodes[i])));ctx.closePath();ctx.fillStyle=color(cell.reduce((s,i)=>s+u[i],0)/3);ctx.fill();if($('grid').checked){ctx.strokeStyle='rgba(255,255,255,.23)';ctx.lineWidth=.4;ctx.stroke()}});
- ctx.strokeStyle='white';ctx.lineWidth=2;ctx.beginPath();ctx.arc(...p(d.nodes[initial]),6,0,Math.PI*2);ctx.stroke();ctx.fillStyle='black';ctx.beginPath();ctx.arc(...p(d.nodes[tracked]),4,0,2*Math.PI);ctx.fill();
- if($('arrows').checked)for(let i=0;i<d.nodes.length;i+=4){const [x,y]=d.nodes[i];if(Math.round(x*32)%4||Math.round(y*32)%4||u[i]<.03)continue;const [a,b]=p(d.nodes[i]),len=u[i]*24;ctx.strokeStyle='white';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(a+len,b-len);ctx.lineTo(a+len-5,b-len+1);ctx.moveTo(a+len,b-len);ctx.lineTo(a+len-1,b-len+5);ctx.stroke()}
- ctx.fillStyle='#203e3a';ctx.font='12px system-ui';ctx.fillText('y ↑',8,18);ctx.fillText('x →',w-42,w-8);ctx.fillText('u: 0 蓝 → 1 红',34,17);
- c.onclick=e=>{pause();const rect=c.getBoundingClientRect(),x=(e.clientX-rect.left-30)/(w-60),y=1-(e.clientY-rect.top-30)/(w-60);tracked=d.nodes.reduce((b,p,i)=>Math.hypot(p[0]-x,p[1]-y)<Math.hypot(d.nodes[b][0]-x,d.nodes[b][1]-y)?i:b,0);draw()};
- const view=surface('surface'),q=(xy,z)=>[view.w*.5+(xy[0]-xy[1])*view.w*.4,view.w*.68-(xy[0]+xy[1])*view.w*.22-z*view.w*.35];
- const ordered=d.cells.map((cell,i)=>({cell,i,depth:cell.reduce((s,v)=>s+d.nodes[v][0]+d.nodes[v][1],0)})).sort((a,b)=>b.depth-a.depth);
- ordered.forEach(({cell})=>{view.ctx.beginPath();cell.forEach((i,k)=>k?view.ctx.lineTo(...q(d.nodes[i],u[i])):view.ctx.moveTo(...q(d.nodes[i],u[i])));view.ctx.closePath();view.ctx.fillStyle=color(cell.reduce((s,i)=>s+u[i],0)/3);view.ctx.fill();view.ctx.strokeStyle='rgba(255,255,255,.25)';view.ctx.lineWidth=.35;if($('grid').checked)view.ctx.stroke()});
- view.ctx.fillStyle='#203e3a';view.ctx.font='12px system-ui';view.ctx.fillText('高度 = u（固定比例）',14,18);view.ctx.fillText('x',view.w*.88,view.w*.5);view.ctx.fillText('y',view.w*.1,view.w*.5);
- $('state').textContent=`第 ${j}/80 个真实物理步；峰值 ${peak.toFixed(4)}；当前峰位置 (${d.nodes[peakIndex].map(v=>v.toFixed(3)).join(', ')})。初始白圈保持在 (${d.nodes[initial].map(v=>v.toFixed(3)).join(', ')})，可据此判断波团传播。`;
- $('tracked').innerHTML=math(String.raw`(x_i,y_i)=(${d.nodes[tracked].map(v=>v.toFixed(3)).join(',')}),\quad u_i(0)=${d.values[0][tracked].toFixed(5)},\quad u_i(t)=${u[tracked].toFixed(5)}`)}
-$('play').onclick=()=>{if(timer){pause();return}if(j===80)j=0;$('play').textContent='暂停';timer=setInterval(()=>{j++;draw();if(j===80)pause()},120)};$('reset').onclick=()=>{pause();j=0;draw()};$('previous').onclick=()=>{pause();j=Math.max(0,j-1);draw()};$('next').onclick=()=>{pause();j=Math.min(80,j+1);draw()};$('timeline').oninput=()=>{pause();j=+$('timeline').value;draw()};$('grid').onchange=draw;$('arrows').onchange=draw;window.addEventListener('resize',draw);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});$('verification').textContent=`1089节点、2048三角形，零边界最大误差 ${d.boundary_max}；非线性残量最大 ${d.residual_max.toExponential(3)}。本例没有解析解，代数残量不代表已完成网格收敛验证。`;draw();
-</script></html>
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>二维Burgers · 黏性与求解过程</title>
+<style>
+:root{color-scheme:light;--ink:#203e3a;--muted:#647670;--line:#d9e2dc;--accent:#087b69}*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:#f4f5f0;color:var(--ink);font:16px/1.8 system-ui,'Microsoft YaHei',sans-serif}main{max-width:1200px;margin:auto;padding:26px 24px}h1{font-size:30px;line-height:1.4;margin:12px 0}h2{font-size:21px;margin:5px 0 12px}h3{font-size:17px}a{color:var(--accent)}p{color:var(--muted);margin:8px 0 14px}.pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:18px;margin:18px 0;min-width:0}.pair>.panel{margin:0}canvas{width:100%;aspect-ratio:1;display:block}.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:14px 0}button,select{font:inherit;padding:8px 12px;background:white;color:inherit;border:1px solid var(--line);border-radius:6px;max-width:100%}button{cursor:pointer}button.primary{background:var(--accent);color:white}button:disabled,select:disabled{opacity:.5;cursor:default}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #b77728;outline-offset:3px}input[type=range]{flex:1;min-width:100px;accent-color:var(--accent)}.formula{overflow-x:auto;padding:10px 0}.note{background:#e7eee7;padding:14px;border-radius:7px;color:var(--ink)}.small{font-size:13px}.metrics{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}.metric{flex:1;min-width:170px;padding:12px 16px;background:white;border:1px solid var(--line);border-radius:9px}.metric strong{font-size:24px;display:block}.metric span{font-size:13px;color:var(--muted)}.chart{height:190px;aspect-ratio:auto;cursor:crosshair}#residual{height:220px;aspect-ratio:auto;cursor:crosshair}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}td,th{text-align:right;border-bottom:1px solid var(--line);padding:8px}th:first-child,td:first-child{text-align:left}summary{cursor:pointer;font-size:20px;font-weight:600}details details summary{font-size:16px}.step-flow{display:flex;gap:8px;flex-wrap:wrap}.step-flow span{padding:7px 10px;border-bottom:3px solid #b6cec1;font-size:14px}math{font-size:1.1em}footer{margin-top:26px;font-size:13px;color:var(--muted)}#legend span{display:inline-block;margin-right:18px}#loading{color:var(--accent)}@media(max-width:760px){main{padding:18px 14px}.pair{grid-template-columns:1fr}h1{font-size:25px}.panel{padding:14px}.metric{min-width:130px}.controls{gap:8px}.formula{font-size:14px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style><main>
+<a href="../../index.html">← 演示首页</a>
+<h1>黏性改变后，一团高值怎样传播、变平？</h1>
+<p>二维平面上，每个位置都有一个标量值u。局部输运速度是(u,u)，高值向右上方传播；黏性ν同时将陡峭变化抹平。四组计算使用相同初值、固定网格和时间步。</p>
+<div id="equation" class="formula"></div>
+<p class="small">单位正方形、零边界、无外力；左下方光滑局部峰为初值。每个黏性选项都来自实际P1有限元求解。</p>
+<p id="loading">正在载入不同黏性及逐步求解数据…</p>
+<div class="controls"><label for="scheme">时间格式</label><select id="scheme" data-loading disabled></select><label for="viscosity">黏性系数</label><select id="viscosity" data-loading disabled></select><label for="right-mode">右图显示</label><select id="right-mode"><option value="height">立体数值曲面</option><option value="compare">同一时刻的黏性对照</option></select><label id="comparison-control" hidden>对照黏性 <select id="comparison"></select></label></div>
+<section class="panel"><h2>空间半离散之后，怎样迈出时间一步？</h2>
+<div class="formula" data-tex="M\dot U+\nu KU+C(U)U=0"></div>
+<p>先固定P1空间基函数，组装质量矩阵M、刚度矩阵K和输运矩阵C，得到关于时间的常微分方程组。再选择下面的显隐组合，把已知的旧场变成下一个时间节点的场。</p>
+<div id="time-formula" class="formula"></div><div id="scheme-formula" class="formula"></div><p id="time-levels" class="note"></p>
+<details><summary>矩阵项各表示什么？</summary>
+<div class="formula" data-tex="M_{ij}=\int_\Omega\phi_i\phi_j,\quad K_{ij}=\int_\Omega\nabla\phi_i\cdot\nabla\phi_j"></div>
+<div class="formula" data-tex="C_{ij}(U)=\int_\Omega u_h\phi_i(\partial_x\phi_j+\partial_y\phi_j),\quad R_{ij}(U^n)=\int_\Omega(\partial_xu_h^n+\partial_yu_h^n)\phi_i\phi_j"></div>
+<p>方案二冻结的是旧梯度；R是带系数的质量矩阵，和“旧速度乘新梯度”的输运矩阵不同。</p></details>
+<p class="small">参考<a href="https://wnesm678i4.feishu.cn/wiki/VLg4wtFGpiN2GzkqsYOcwL3wnHc">提供的文档：标量Burgers两种格式及其主程序</a>。ν=1/Re；这里比较固定空间网格上的时间格式。</p></section>
+<div class="controls"><button id="play" class="primary" data-loading disabled>播放时间演化</button><button id="reset" data-loading disabled>回到初始</button><button id="previous" data-loading disabled>上一步</button><button id="next" data-loading disabled>下一步</button><button id="show-solver" data-loading disabled>看本步怎样求解</button><select id="speed" aria-label="时间演化播放速度"><option value="150">正常速度</option><option value="500">慢速</option><option value="60">快速</option></select></div>
+<div class="controls"><strong id="time" aria-live="polite"></strong><input id="timeline" aria-label="二维物理时间" type="range" min="0" max="80" value="0"></div>
+<div class="controls small"><label><input type="checkbox" id="grid" checked>显示固定网格</label><label><input type="checkbox" id="arrows" checked>显示局部输运方向</label></div>
+
+<section class="pair"><article class="panel"><h2 id="left-title">① 俯视：固定位置上的值在变化</h2><canvas id="plane" role="img" aria-label="二维Burgers固定网格颜色图"></canvas><p class="small">x向右，y向上，色标始终为0—1。白圈为初始峰位置，黑点是所选的固定节点。点击节点，可查看它的数值和离散方程。</p></article><article class="panel"><h2 id="right-title">② 同一个解，竖起来看数值大小</h2><canvas id="right-view" role="img" aria-label="Burgers数值曲面或不同黏性对照"></canvas><p id="right-caption" class="small"></p></article></section>
+<div class="metrics"><div class="metric"><span>当前峰值（初始为1）</span><strong id="peak-value">—</strong></div><div class="metric"><span>剩余能量 E(t)/E(0)</span><strong id="energy-value">—</strong></div><div class="metric"><span>本物理步计算量</span><strong id="iteration-value">—</strong></div></div>
+<p id="state" class="note"></p><div id="tracked" class="formula"></div>
+<p class="small">箭头表示局部对流系数(u,u)。黏性越大，峰通常更快变低、变宽；速度仍由当前u决定，因此峰值下降也会影响后续输运。</p>
+<section class="panel"><h2>把不同黏性放在同一条时间轴上</h2><p id="legend" class="small"></p><div class="pair"><div><h3>峰值怎样下降？</h3><canvas id="peak-chart" class="chart" role="img" aria-label="四种黏性下峰值随时间变化"></canvas></div><div><h3>能量还剩多少？</h3><canvas id="energy-chart" class="chart" role="img" aria-label="四种黏性下归一化能量随时间变化"></canvas></div></div><p class="small">粗线为当前黏性；竖线为当前时刻。点击曲线区域可定位实际物理步。</p><p id="energy-balance" class="small"></p></section>
+<details id="solver" class="panel"><summary>这一物理时间步，求解器怎样算出新场？</summary>
+<div id="solver-empty"><p>t=0只给定初值。从第一个物理步开始，才需要组装并求解时间步方程。</p><button id="start-solver">查看第1步求解</button></div>
+<div id="solver-content" hidden><p id="solver-intro"></p>
+<div class="step-flow"><span>① 取已知场 Uⁿ</span><span>② 按时间格式组装</span><span>③ 解线性系统</span><span>④ 检查格式残量</span></div>
+<div id="update" class="formula"></div>
+<div class="controls"><button id="inner-play">重演本步求解</button><button id="inner-previous">上个阶段</button><button id="inner-next">下个阶段</button><strong id="inner-label"></strong></div>
+<input id="inner-step" aria-label="本物理步求解阶段" type="range" min="0" value="0" style="width:100%">
+<p id="stage-state" class="note"></p><p id="residual-value" class="small"></p>
+<div class="pair"><div><h3>当前求解阶段的场</h3><canvas id="iterate" role="img" aria-label="实际求解中间场"></canvas></div><div><h3>相对上一时刻，哪里增、哪里减？</h3><canvas id="increment" role="img" aria-label="当前近似与上一物理时刻的数值差"></canvas></div></div>
+<p class="small">中间场为实际求解记录；增量图单独按本步最大绝对变化缩放，不与上方0—1色标混用。</p>
+<h3 id="residual-title"></h3><canvas id="residual" role="img" aria-label="当前物理步所选格式的残量变化"></canvas><p id="residual-note" class="small"></p>
+<details><summary>展开：所选固定节点的方程怎样组装？</summary><h3 id="row-title"></h3><p>点击上方平面或本步近似场选择节点。P1单元把该节点及其相邻节点连接为一行方程。</p><div id="row-equation" class="formula"></div><div id="row-table-wrap"><div class="scroll"><table><thead><tr><th>相邻节点 j</th><th>Mᵢⱼ/Δt</th><th>νKᵢⱼ</th><th>输运矩阵项</th><th>Aᵢⱼ</th><th>当前Uⱼ</th></tr></thead><tbody id="row-table"></tbody></table></div><p id="row-rhs" class="small"></p></div></details>
+</div></details>
+<details class="panel"><summary>方程、能量与数值验证</summary>
+<p>空间半离散固定为P1有限元；时间格式由上方选择。代数残量仅检查所选时间格式的方程，线性格式不需要满足全隐式方程的非线性残量。</p>
+<div class="formula" data-tex="r=\frac{\|F_{\mathrm{scheme}}(U)_{\mathrm{free}}\|_2}{\max(\|b_{\mathrm{free}}\|_2,1)}\leq10^{-9}"></div>
+<p>每步能量平衡包含黏性耗散、时间离散项和有符号输运功。显隐输运功可以正也可以负；全隐式零边界时其值接近零。</p>
+<div class="formula" data-tex="E^{n+1}-E^n+\tfrac12\|U^{n+1}-U^n\|_M^2+\Delta t\,\nu(U^{n+1})^TKU^{n+1}+\Delta t\,(U^{n+1})^TT_{\mathrm{scheme}}=0"></div>
+<p id="verification" class="small"></p><h3>适用范围</h3><p class="small">1089节点、2048三角形，Δt=0.01，推进至t=0.8。该无源初值问题没有提供解析解；代数残量和能量平衡用于核对求解过程，不能代替空间、时间加密误差研究。曲面高度表示标量u，图中的网格始终固定。</p>
+<p><a href="results_2d.json.gz">完整数值与迭代记录（gzip）</a> · <a href="validation_2d.json">验证指标</a> · <a href="solve_2d.py">数据生成</a> · <a href="schemes_2d.py">时间格式实现</a></p></details>
+<footer>改变黏性后保留当前物理时刻，便于比较同一时刻的结果。所有图、曲线与求解阶段来自实际计算记录。</footer>
+</main><script>__KATEX__</script><script id="plane-data" type="application/json">__DATA__</script><script>__SCRIPT__</script></html>
