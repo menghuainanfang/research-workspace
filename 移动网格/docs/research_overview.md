@@ -2,7 +2,13 @@
 
 [当前工作与演示](../README.md) · [文档分类](README.md)
 
-## 研究定位（2026-10-23 更新）
+## 现行研究安排（2026-11-27）
+
+以二维变分移动网格为主，三维推广与验证为辅。先恢复 [P1 网格优化](mentor_2026-10-23/optimization_flow.md) 与 [P2 物理时间三重循环](mentor_2026-10-23/three_loop_time_demo_v2.md) 支持的已有推导和实验，围绕网格泛函、梯度、网格质量及收敛条件推进。逐步阅读[课题组 Trace–Log 专题](https://github.com/suanhaitech/meshflow_group/tree/main/topic/research-progress/tracelog-moving-mesh)，根据研究进展确定三维验证与二阶优化的范围。正式题目沿用现有记录。
+
+[2026-11-27 科研阶段快照](科研阶段快照_2026-11-27.md)
+
+## 研究定位（2026-10-23 记录）
 
 **正式题目暂保持《高维鲁棒的能量稳定变分移动网格算法研究及其应用》。** 已明确的实际研究主线是：**以导师团队2026年的迹—对数变分移动网格论文为基础，面向三维四面体网格完成数值算法实现、验证与应用。** 基础论文为 Wang、Huang、Wei，[*A Trace–Logarithmic Variational Functional for Equidistribution and Alignment in Moving Mesh Adaptation*](https://arxiv.org/abs/2601.20235)。
 
@@ -16,7 +22,7 @@
 
 
 
-## 当前执行计划：12周论文阅读与连续实验（2026-10-26 起）
+## 12周论文阅读与连续实验计划（2026-10-26 记录）
 
 根据2026年10月组会反馈，近期从按月阅读调整为**每周1篇主论文、部分周1篇辅助论文，配合数学推导、代码/实验及组会证据**。这轮仅安排现有资料所能支持的12周（W01–W12），不提前锁定毕业前的每一周。
 
